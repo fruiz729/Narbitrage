@@ -409,8 +409,8 @@ print('t_order = ' + str(t_order-t_calc))
 
 priceqtylist = [price_usdtbtc0, price_usdtbtc1, price_usdtbtc2, qty_usdtbtc0, qty_usdtbtc1, qty_usdtbtc2]
 
-outfile = open('C:/CryptoTrading Code/Arbitrage Data/ArbitrageData__start_28May2018_2.csv','w')
+outfile = open('/home/ubuntu/data_files/BUTTS.csv', 'a')
 out = csv.writer(outfile)
-#out.writerrows(priceqtylist)
-out.writerrows(['test'])
+out.writerow(priceqtylist)
+#out.writerow(['test'])
 outfile.close()
