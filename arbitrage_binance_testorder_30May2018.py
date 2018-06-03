@@ -24,7 +24,7 @@ time_res = client.get_server_time()
 symbols = ['BTCUSDT', 'ETHBTC', 'ETHUSDT']
 
 #enter the theoretical liquid capital available
-liquid = 1000.00 #keep decimal to make it a float
+liquid = 100.00 #keep decimal to make it a float
 fee = 0.003*liquid ## 0.1% x amount of tradies x liquid
 
 t0 = time.time()
@@ -318,8 +318,10 @@ if d_eth <= 0:
 
 ##if d_btc < fee_fake_btc and d_eth < fee_fake_eth:
 ##    print('No profit because of fee')
-    
-elif d_btc >= d_eth:
+
+balance_usdt = liquid
+
+if d_btc >= d_eth:
     print('Trading USDT->ETH->BTC->USDT')
 
     order_usdt_eth = client.create_test_order(symbol='ETHUSDT',side=SIDE_BUY,
@@ -357,10 +359,9 @@ elif d_btc >= d_eth:
 
     balance_usdt -= fee_usdt
     balance_usdt = round(balance_usdt, 2)
-    print('Done back to USDT, final balance: ' + str(round(balance_btc*wprice_btcusdt),2))
-
-    
-elif d_btc < d_eth:
+    print('Done back to USDT, final balance: ' + str(round(balance_btc*wprice_btcusdt,2)))
+           
+if d_btc < d_eth:
     print('Trading USDT->BTC->ETH->USDT')
     order_usdt_eth = client.create_test_order(symbol='BTCUSDT', side = SIDE_BUY,
                      type=Client.ORDER_TYPE_MARKET,quantity= round((liquid/wprice_usdtbtc),6))
@@ -419,7 +420,7 @@ weightedavglist = [wprice_usdtbtc, wprice_btcusdt, wprice_usdteth, wprice_ethusd
 
 profitlist = [balance_usdt, balance_usdt - liquid, 1-(balance_usdt/liquid), f_btc, f_eth, d_btc, d_eth]
 
-orderopen = open('/home/ubuntu/Narbitrage/data_files/orderbooks.csv', 'a')
+orderopen = open('/home/ubuntu/Narbitrage/data_files/orderbook.csv', 'a')
 orderout = csv.writer(orderopen)
 orderout.writerow(priceqtylist)
 orderopen.close()
