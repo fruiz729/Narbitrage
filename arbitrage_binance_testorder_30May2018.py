@@ -24,7 +24,7 @@ time_res = client.get_server_time()
 symbols = ['BTCUSDT', 'ETHBTC', 'ETHUSDT']
 
 #enter the theoretical liquid capital available
-liquid = 100.00 #keep decimal to make it a float
+liquid = 1000.00 #keep decimal to make it a float
 fee = 0.003*liquid ## 0.1% x amount of tradies x liquid
 
 t0 = time.time()
@@ -407,10 +407,29 @@ print ('t_book = ' + str(t_book-t0))
 print ('t_calc = ' + str(t_calc-t_book))
 print('t_order = ' + str(t_order-t_calc))
 
-priceqtylist = [price_usdtbtc0, price_usdtbtc1, price_usdtbtc2, qty_usdtbtc0, qty_usdtbtc1, qty_usdtbtc2]
+priceqtylist = [price_usdtbtc0, price_usdtbtc1, price_usdtbtc2, qty_usdtbtc0, qty_usdtbtc1, qty_usdtbtc2,
+                price_btcusdt0, price_btcusdt1, price_btcusdt2, qty_btcusdt0, qty_btcusdt1, qty_btcusdt2,
+                price_ethusdt0, price_ethusdt1, price_ethusdt2, qty_ethusdt0, qty_ethusdt1, qty_ethusdt2,
+                price_usdteth0, price_usdteth1, price_usdteth2, qty_usdteth0, qty_usdteth1, qty_usdteth2,
+                price_btceth0, price_btceth1, price_btceth2, qty_btceth0, qty_btceth1, qty_btceth2,
+                price_ethbtc0, price_ethbtc1, price_ethbtc2, qty_ethbtc0, qty_ethbtc1, qty_ethbtc2,
+                t_book, t_calc, t_order]
 
-outfile = open('/home/ubuntu/Narbitrage/data_files/BUTTS.csv', 'a')
-out = csv.writer(outfile)
-out.writerow(priceqtylist)
-#out.writerow(['test'])
-outfile.close()
+weightedavglist = [wprice_usdtbtc, wprice_btcusdt, wprice_usdteth, wprice_ethusdt, wprice_btceth,wprice_ethbtc]
+
+profitlist = [balance_usdt, balance_usdt - liquid, 1-(balance_usdt/liquid), f_btc, f_eth, d_btc, d_eth]
+
+orderopen = open('/home/ubuntu/Narbitrage/data_files/orderbooks.csv', 'a')
+orderout = csv.writer(orderopen)
+orderout.writerow(priceqtylist)
+orderopen.close()
+
+avgopen = open('/home/ubuntu/Narbitrage/data_files/weightedaverage.csv', 'a')
+avgout = csv.writer(avgopen)
+avgout.writerow(weightedavglist)
+avgopen.close()
+
+profitopen = open('/home/ubuntu/Narbitrage/data_files/profit.csv', 'a')
+profitout = csv.writer(profitopen)
+profitout.writerow(profitlist)
+avgopen.close()
