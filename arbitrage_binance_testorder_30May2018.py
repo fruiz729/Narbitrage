@@ -409,7 +409,7 @@ print('t_order = ' + str(t_order-t_calc))
 
 priceqtylist = [price_usdtbtc0, price_usdtbtc1, price_usdtbtc2, qty_usdtbtc0, qty_usdtbtc1, qty_usdtbtc2]
 
-outfile = open('/home/ubuntu/data_files/BUTTS.csv', 'a')
+outfile = open('/home/ubuntu/Narbitrage/data_files/BUTTS.csv', 'a')
 out = csv.writer(outfile)
 out.writerow(priceqtylist)
 #out.writerow(['test'])
