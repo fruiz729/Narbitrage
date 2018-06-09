@@ -32,6 +32,7 @@ order_books = {}
 for coin in symbols:
     order_books[coin] = client.get_order_book(symbol=coin)
 t_book = time.time()
+
 ##print('qty_btcusdt')
 ##print(float(order_books['BTCUSDT']['asks'][0][1]))
 ##print('price_btcusdt')
@@ -68,26 +69,30 @@ if qty_usdtbtc0 >= liquid/price_usdtbtc0:
 elif (qty_usdtbtc0 + qty_usdtbtc1) >= liquid/np.average([price_usdtbtc0,price_usdtbtc1],
                     weights = [qty_usdtbtc0,(qty_usdtbtc1)]):
 #Finding weighted price average of first two quantities                                                        
-    actprice_usdtbtc = np.average([price_usdtbtc0,price_usdtbtc1],
-                    weights = [qty_usdtbtc0, qty_usdtbtc1])
-#Re-weighting the average to include only the amount of qty2 that will be bought
+#    actprice_usdtbtc = np.average([price_usdtbtc0,price_usdtbtc1],
+#                   weights = [qty_usdtbtc0, qty_usdtbtc1])
+
+    #Re-weighting the average to include only the amount of qty2 that will be bought
     wprice_usdtbtc = np.average([price_usdtbtc0,price_usdtbtc1],
-                    weights = [qty_usdtbtc0, (liquid/actprice_usdtbtc)-qty_usdtbtc0])                                                 
+                    weights = [qty_usdtbtc0, (liquid-(qty_usdtbtc0*price_usdtbtc0))/price_usdtbtc1])                                                 
     tot_qty_usdtbtc = qty_usdtbtc0 + qty_usdtbtc1
 ##    print('enough qty in first & second bid')
 ##    print('qty_usdtbtc0 + qty_usdtbtc1 = ' + str(qty_usdtbtc0+qty_usdtbtc1) + '  liquid/wprice_usdtbtc = ' + str(liquid/wprice_usdtbtc))
 ##    print('\t')
-elif (qty_usdtbtc0 + qty_usdtbtc1 + qty_usdtbtc2) >=  liquid/np.average([price_usdtbtc0,price_usdtbtc1,price_usdtbtc2],
-                    weights = [qty_usdtbtc0,qty_usdtbtc1,qty_usdtbtc2]):
-    actprice_usdtbtc = np.average([price_usdtbtc0,price_usdtbtc1,price_usdtbtc2],
-                    weights = [qty_usdtbtc0,qty_usdtbtc1,qty_usdtbtc2])
+elif (qty_usdtbtc0 + qty_usdtbtc1 + qty_usdtbtc2) >= liquid/np.average([price_usdtbtc0,price_usdtbtc1,price_usdtbtc2],
+      weights = [qty_usdtbtc0,qty_usdtbtc1, (liquid - (qty_usdtbtc0/price_usdtbtc0)+(qty_usdtbtc1/price_usdtbtc1))/price_usdtbtc2]):
+#    actprice_usdtbtc = np.average([price_usdtbtc0,price_usdtbtc1,price_usdtbtc2],
+#                    weights = [qty_usdtbtc0,qty_usdtbtc1,qty_usdtbtc2])
+
     wprice_usdtbtc = np.average([price_usdtbtc0,price_usdtbtc1,price_usdtbtc2],
-                    weights = [qty_usdtbtc0,qty_usdtbtc1,(liquid/actprice_usdtbtc)-(qty_usdtbtc0+qty_usdtbtc1)])
+                    weights = [qty_usdtbtc0,qty_usdtbtc1,(liquid - (qty_usdtbtc0/price_usdtbtc0)+(qty_usdtbtc1/price_usdtbtc1))/price_usdtbtc2])
     tot_qty_usdtbtc = qty_usdtbtc0 + qty_usdtbtc1 + qty_usdtbtc2
 ##    print('enough qty in first & second & third bid')
 ##    print('qty_usdtbtc0 + qty_usdtbtc1 + qty_usdtbtc2 = ' + str(qty_usdtbtc0+qty_usdtbtc1+qty_usdtbtc2) + '  liquid/wprice_usdtbtc = ' + str(liquid/wprice_usdtbtc))
 ##    print('\t')
 else:
+    wprice_usdtbtc = 1.0
+    tot_qty_usdtbtc = 0.0
     print ('FUCK IT - not enough quantity in BTCUSDT Bids to go USDT --> BTC')
     
 ####################################################################################################################
@@ -107,28 +112,30 @@ if qty_btcusdt0 >= liquid/price_btcusdt0:
 ##    print('qty_btcusdt0 = ' + str(qty_btcusdt0) + '  liquid/price_btcusdt0 = ' + str(liquid/price_btcusdt0))
 ##    print('\t')
 elif (qty_btcusdt0 + qty_btcusdt1) >= liquid/np.average([price_btcusdt0,price_btcusdt1],
-                    weights = [qty_btcusdt0,qty_btcusdt1]):
-    actprice_btcusdt = np.average([price_btcusdt0,price_btcusdt1],
-                    weights = [qty_btcusdt0,qty_btcusdt1])
+                    weights = [qty_btcusdt0,(liquid-(qty_btcusdt0*price_btcusdt0))/price_btcusdt1]):
+#    actprice_btcusdt = np.average([price_btcusdt0,price_btcusdt1],
+#                    weights = [qty_btcusdt0,qty_btcusdt1])
     wprice_btcusdt = np.average([price_btcusdt0,price_btcusdt1],
-                    weights = [qty_btcusdt0,(liquid/actprice_btcusdt)-qty_btcusdt0])
+                    weights = [qty_btcusdt0,(liquid-(qty_btcusdt0*price_btcusdt0))/price_btcusdt1])
     
     tot_qty_btcusdt = qty_btcusdt0 + qty_btcusdt1
 ##    print('enough qty in first & second bid')
 ##    print('qty_btcusdt0 + qtybtcusdt1 = ' + str(qty_btcusdt0+qty_btcusdt1) + '  liquid/wprice_btcusdt = ' + str(liquid/wprice_btcusdt))
 ##    print('\t')
 elif (qty_btcusdt0 + qty_btcusdt1 + qty_btcusdt2) >=  liquid/np.average([price_btcusdt0,price_btcusdt1,price_btcusdt2],
-                    weights = [qty_btcusdt0,qty_btcusdt1,qty_btcusdt2]):
-    actprice_btcusdt = np.average([price_btcusdt0,price_btcusdt1,price_btcusdt2],
-                    weights = [qty_btcusdt0,qty_btcusdt1,qty_btcusdt2])
+                    weights = [qty_btcusdt0,qty_btcusdt1,(liquid - (qty_btcusdt0*price_btcusdt0)+(qty_btcusdt1*price_btcusdt1))/price_btcusdt2]):
+#    actprice_btcusdt = np.average([price_btcusdt0,price_btcusdt1,price_btcusdt2],
+#                    weights = [qty_btcusdt0,qty_btcusdt1,qty_btcusdt2])
     wprice_btcusdt = np.average([price_btcusdt0,price_btcusdt1,price_btcusdt2],
-                    weights = [qty_btcusdt0,qty_btcusdt1,(liquid/actprice_btcusdt)-(qty_btcusdt0+qty_btcusdt1)])
+                    weights = [qty_btcusdt0,qty_btcusdt1,(liquid -(qty_btcusdt0*price_btcusdt0)+(qty_btcusdt1*price_btcusdt1))/price_btcusdt2])
 
     tot_qty_btcusdt = qty_btcusdt0 + qty_btcusdt1 + qty_btcusdt2
 ##    print('enough qty in first & second & third bid')
 ##    print('qty_btcusdt0 + qty_btcusdt1 + qty_btcusdt2 = ' + str(qty_btcusdt0+qty_btcusdt1+qty_btcusdt2) + '  liquid/wprice_btcusdt = ' + str(liquid/wprice_btcusdt))
 ##    print('\t')
 else:
+    wprice_btcusdt = 1.0
+    tot_qty_btcusdt = 0.0
     print ('FUCK IT - not enough quantity in BTCUSDT ASKS to go BTC --> USDT')
 #############################################################################################################################
 ##BID PRICES FOR ETHUSDT MARKET - MUST MATCH WHEN TRADING USDT -> ETH
@@ -147,22 +154,22 @@ if qty_usdteth0 >= liquid/price_usdteth0:
 ##    print('qty_usdteth0 = ' + str(qty_usdteth0) + '  liquid/price_usdteth0 = ' + str(liquid/price_usdteth0))
 ##    print('\t')
 elif (qty_usdteth0 + qty_usdteth1) >= liquid/np.average([price_usdteth0,price_usdteth1],
-                    weights = [qty_usdteth0,qty_usdteth1]):
-    actprice_usdteth = np.average([price_usdteth0,price_usdteth1],
-                    weights = [qty_usdteth0,qty_usdteth1])
+                    weights = [qty_usdteth0,(liquid - (qty_usdteth0*price_usdteth0))/price_usdteth1]):
+#    actprice_usdteth = np.average([price_usdteth0,price_usdteth1],
+#                    weights = [qty_usdteth0,qty_usdteth1])
     wprice_usdteth = np.average([price_usdteth0,price_usdteth1],
-                    weights = [qty_usdteth0,(liquid/actprice_usdteth) - qty_usdteth0])
+                    weights = [qty_usdteth0, (liquid -(qty_usdteth0*price_usdteth0))/price_usdteth1])
    
     tot_qty_usdteth = qty_usdteth0 + qty_usdteth1
 ##    print('enough qty in first & second bid')
 ##    print('qty_usdteth0 + qtyusdteth1 = ' + str(qty_usdteth0+qty_usdteth1) + '  liquid/wprice_usdteth = ' + str(liquid/wprice_usdteth))
 ##    print('\t')
 elif (qty_usdteth0 + qty_usdteth1 + qty_usdteth2) >=  liquid/np.average([price_usdteth0,price_usdteth1,price_usdteth2],
-                    weights = [qty_usdteth0,qty_usdteth1,qty_usdteth2]):
-    actprice_usdteth = np.average([price_usdteth0,price_usdteth1,price_usdteth2],
-                    weights = [qty_usdteth0,qty_usdteth1,qty_usdteth2])
+                    weights = [qty_usdteth0,qty_usdteth1,(liquid-(qty_usdteth0*price_usdteth0)+(qty_usdteth1*price_usdteth1))/price_usdteth2]):
+#    actprice_usdteth = np.average([price_usdteth0,price_usdteth1,price_usdteth2],
+#                    weights = [qty_usdteth0,qty_usdteth1,qty_usdteth2])
     wprice_usdteth = np.average([price_usdteth0,price_usdteth1,price_usdteth2],
-                    weights = [qty_usdteth0,qty_usdteth1,(liquid/actprice_usdteth)-(qty_usdteth0 + qty_usdteth1)])
+                    weights = [qty_usdteth0,qty_usdteth1,(liquid - (qty_usdteth0*price_usdteth0) + (qty_usdteth1*price_usdteth1))/price_usdteth2])
 
 
     tot_qty_usdteth = qty_usdteth0 + qty_usdteth1 + qty_usdteth2
@@ -170,6 +177,8 @@ elif (qty_usdteth0 + qty_usdteth1 + qty_usdteth2) >=  liquid/np.average([price_u
 ##    print('qty_usdteth0 + qty_usdteth1 + qty_usdteth2 = ' + str(qty_usdteth0+qty_usdteth1+qty_usdteth2) + '  liquid/wprice_usdteth = ' + str(liquid/wprice_usdteth))
 ##    print('\t')
 else:
+    wprice_usdteth = 1.0
+    tot_qty_usdteth = 0.0
     print ('FUCK IT - not enough quantity in usdteth ASKS to go USDT --> ETH')
 
 
@@ -190,28 +199,30 @@ if qty_ethusdt0 >= liquid/price_ethusdt0:
 ##    print('qty_ethusdt0 = ' + str(qty_ethusdt0) + '  liquid/price_ethusdt0 = ' + str(liquid/price_ethusdt0))
 ##    print('\t')
 elif (qty_ethusdt0 + qty_ethusdt1) >= liquid/np.average([price_ethusdt0,price_ethusdt1],
-                    weights = [qty_ethusdt0,qty_ethusdt1]):
-    actprice_ethusdt = np.average([price_ethusdt0,price_ethusdt1],
-                    weights = [qty_ethusdt0,qty_ethusdt1])
+                    weights = [qty_ethusdt0, (liquid - (qty_ethusdt0*price_ethusdt0))/price_ethusdt1]):
+#    actprice_ethusdt = np.average([price_ethusdt0,price_ethusdt1],
+#                    weights = [qty_ethusdt0,qty_ethusdt1])
     wprice_ethusdt = np.average([price_ethusdt0,price_ethusdt1],
-                    weights = [qty_ethusdt0,liquid/actprice_ethusdt - qty_ethusdt0])
+                    weights = [qty_ethusdt0,(liquid - (qty_ethusdt0*price_ethusdt0))/price_ethsdt1])
 
     tot_qty_ethusdt = qty_ethusdt0 + qty_ethusdt1
 ##    print('enough qty in first & second bid')
 ##    print('qty_ethusdt0 + qtyethusdt1 = ' + str(qty_ethusdt0+qty_ethusdt1) + '  liquid/wprice_ethusdt = ' + str(liquid/wprice_ethusdt))
 ##    print('\t')
 elif (qty_ethusdt0 + qty_ethusdt1 + qty_ethusdt2) >=  liquid/np.average([price_ethusdt0,price_ethusdt1,price_ethusdt2],
-                    weights = [qty_ethusdt0,qty_ethusdt1,qty_ethusdt2]):
-    actprice_ethusdt = np.average([price_ethusdt0,price_ethusdt1,price_ethusdt2],
-                    weights = [qty_ethusdt0,qty_ethusdt1,qty_ethusdt2])
+                    weights = [qty_ethusdt0,qty_ethusdt1,(liquid - (qty_ethusdt0*price_ethusdt0) + (qty_ethusdt1*price_ethusdt1))/price_ethusdt2]):
+#    actprice_ethusdt = np.average([price_ethusdt0,price_ethusdt1,price_ethusdt2],
+#                    weights = [qty_ethusdt0,qty_ethusdt1,qty_ethusdt2])
     wprice_ethusdt = np.average([price_ethusdt0,price_ethusdt1,price_ethusdt2],
-                    weights = [qty_ethusdt0,qty_ethusdt1,(liquid/actprice_ethusdt) - (qty_ethusdt0 + qty_ethusdt1)])
+                    weights = [qty_ethusdt0,qty_ethusdt1, (liquid - (qty_ethusdt0*price_ethusdt0) + (qty_ethusdt1*price_ethusdt1))/price_ethusdt2])
 
     tot_qty_ethusdt = qty_ethusdt0 + qty_ethusdt1 + qty_ethusdt2
 ##    print('enough qty in first & second & third bid')
 ##    print('qty_ethusdt0 + qty_ethusdt1 + qty_ethusdt2 = ' + str(qty_ethusdt0+qty_ethusdt1+qty_ethusdt2) + '  liquid/wprice_ethusdt = ' + str(liquid/wprice_ethusdt))
 ##    print('\t')
 else:
+    wprice_ethusdt = 1.0
+    tot_qty_ethusdt = 0.0
     print ('FUCK IT - not enough quantity in ethusdt ASKS to go ETH --> USDT')
 
 ############################################################################################################################
@@ -224,33 +235,32 @@ qty_btceth0 = float(order_books['ETHBTC']['bids'][0][1])
 qty_btceth1 = float(order_books['ETHBTC']['bids'][1][1])
 qty_btceth2 = float(order_books['ETHBTC']['bids'][2][1])
 
-if qty_btceth0 >= (liquid/wprice_usdtbtc)/price_btceth0:
+if qty_btceth0*price_btceth0 >= liquid/wprice_usdtbtc:
     wprice_btceth = price_btceth0
     tot_qty_btceth = qty_btceth0
 ##    print('enough qty in first bid')
 ##    print('qty_btceth0 = ' + str(qty_btceth0) + '  liquid/price_btceth0 = ' + str(liquid/price_btceth0))
 ##    print('\t')
-elif (qty_btceth0 + qty_btceth1) >= (liquid/wprice_usdtbtc)/np.average([price_btceth0,price_btceth1],
-                    weights = [qty_btceth0,qty_btceth1]):
-#Did not need intermediate weighted average; converted liquid straight to ethereum to account for weight of liquid used
-    wprice_btceth = np.average([price_btceth0,price_btceth1],
-                    weights = [qty_btceth0,(liquid/wprice_usdteth)-qty_btceth0])
+elif (qty_btceth0+qty_btceth1)*np.average([price_btceth0, price_btceth1],weights = [qty_btceth0*price_btceth0, (liquid/wprice_usdtbtc)-(qty_btceth0*price_btceth0)])>= liquid/wprice_usdtbtc:
+    wprice_btceth = np.average([price_btceth0,price_btceth1], weights = [qty_btceth0*price_btceth0, (liquid/wprice_usdtbtc)-(qty_btceth0*price_btceth0)])
 
     tot_qty_btceth = qty_btceth0 + qty_btceth1
-##    print('enough qty in first & second bid')
-##    print('qty_btceth0 + qtybtceth1 = ' + str(qty_btceth0+qty_btceth1) + '  liquid/wprice_btceth = ' + str(liquid/wprice_btceth))
-##    print('\t')
-elif (qty_btceth0 + qty_btceth1 + qty_btceth2) >=  (liquid/wprice_usdtbtc)/np.average([price_btceth0,price_btceth1,price_btceth2],
-                    weights = [qty_btceth0,qty_btceth1,qty_btceth2]):
-#Did not need intermediate weighted average; converted liquid straight to ethereum to account for weight of liquid used
+                                          ##    print('enough qty in first & second bid')
+                                          ##    print('qty_btceth0 + qtybtceth1 = ' + str(qty_btceth0+qty_btceth1) + '  liquid/wprice_btceth = ' + str(liquid/wprice_btceth))
+                                          ##    print('\t')
+                                          
+elif (qty_btceth0 + qty_btceth1 + qty_btceth2)*np.average([price_btceth-0, price_btceth1, price_btceth2], weights = [qty_btceth0*price_btceth0,qty_btceth1*price_btceth1, liquid/wprice_usdtbtc-(qty_btceth0*price_btceth0 + qty_btceth1*price_btceth1)]) >= liquid/wprice_usdtbtc:
+
     wprice_btceth = np.average([price_btceth0,price_btceth1,price_btceth2],
-                    weights = [qty_btceth0,qty_btceth1,(liquid/wprice_usdteth)-(qty_btceth0+qty_btceth1)])
+                    weights = [qty_btceth0,qty_btceth1,liquid/wprice_usdtbtc - (qty_btceth0*price_btceth0 + qty_btceth1*price_btceth1)])
 
     tot_qty_btceth = qty_btceth0 + qty_btceth1 + qty_btceth2
 ##    print('enough qty in first & second & third bid')
 ##    print('qty_btceth0 + qty_btceth1 + qty_btceth2 = ' + str(qty_btceth0+qty_btceth1+qty_btceth2) + '  liquid/wprice_btceth = ' + str(liquid/wprice_btceth))
 ##    print('\t')
 else:
+    wprice_btceth = 1.0
+    tot_qty_btceth = 0.0
     print ('FUCK IT - not enough quantity in btceth ASKS to go BTC --> ETH')
 
 ################################################################################################################################
@@ -279,12 +289,14 @@ elif (qty_ethbtc0 + qty_ethbtc1) >= (liquid/wprice_usdteth):
 ##    print('\t')
 elif (qty_ethbtc0 + qty_ethbtc1 + qty_ethbtc2)>=(liquid/wprice_usdteth):
     wprice_ethbtc = np.average([price_ethbtc0,price_ethbtc1,price_ethbtc2],
-                    weights = [qty_ethbtc0,qty_ethbtc1,(liquid/wprice_usdteth) - (qty_ethbtc0 + qty_ethbtc1)])
+                    weights = [qty_ethbtc0,qty_ethbtc1,(liquid/wprice_usdteth) - (qty_ethbtc0+qty_ethbtc1)])
     tot_qty_ethbtc = qty_ethbtc0 + qty_ethbtc1 + qty_ethbtc2
 ##    print('enough qty in first & second & third bid')
 ##    print('qty_ethbtc0 + qty_ethbtc1 + qty_ethbtc2 = ' + str(qty_ethbtc0+qty_ethbtc1+qty_ethbtc2) + '  liquid/wprice_ethbtc = ' + str(liquid/wprice_ethbtc))
 ##    print('\t')
 else:
+    wprice_ethbtc = 1.0
+    tot_qty_ethbtc = 0.0
     print ('FUCK IT - not enough quantity in ethbtc ASKS to go ETH --> BTC')
 
 t_calc = time.time()
@@ -295,20 +307,30 @@ f_eth = wprice_usdtbtc*wprice_btceth
 d_btc = f_btc - wprice_usdtbtc
 d_eth = f_eth - wprice_usdteth
 
+f_btc_liquid = ((liquid/wprice_usdteth)*wprice_ethbtc)*wprice_btcusdt
+f_eth_liquid = ((liquid/wprice_usdtbtc)/wprice_btceth)*wprice_ethusdt
 
+print('\t')
 print('fake bitcoin in usdt: ' + str(f_btc))
 print('difference of fake bitcion and real bitcoin: '+ str(d_btc))
 print('fake eth in usdt: ' + str(f_eth))
 print('difference of fake ethereum and real ethereum: ' + str(d_eth))
 print('\t')
-    
+print('\t')
+print('Potential Profit USDT -> ETH -> BTC -> USDT: ' + str(f_btc_liquid))
+print('Potential Profit USDT -> BTC -> ETH -> USDT: ' + str(f_eth_liquid))
+print('\t')
 
-if d_btc <= 0:
-    print('Trading USDT->ETH->BTC->USDT NOT profitable')
-    print('\t')
-if d_eth <= 0:
-    print('Trading USDT->BTC->ETH->USDT NOT profitable')
-    print('\t')
+
+balance_usdt = liquid
+
+if d_btc <= 0 and d_eth<= 0:
+    print("Trading not profitable")
+#    print('Trading USDT->ETH->BTC->USDT NOT profitable')
+#    print('\t')
+#if d_eth <= 0:
+#   print('Trading USDT->BTC->ETH->USDT NOT profitable')
+#    print('\t')
 
 #fee per coin assuming you have bought usdt amount of fake or middleman btc/eth
 ##fee_fake_btc= 0.003 * f_btc
@@ -319,9 +341,7 @@ if d_eth <= 0:
 ##if d_btc < fee_fake_btc and d_eth < fee_fake_eth:
 ##    print('No profit because of fee')
 
-balance_usdt = liquid
-
-if d_btc >= d_eth:
+elif d_btc >= d_eth:
     print('Trading USDT->ETH->BTC->USDT')
 
     order_usdt_eth = client.create_test_order(symbol='ETHUSDT',side=SIDE_BUY,
@@ -361,7 +381,7 @@ if d_btc >= d_eth:
     balance_usdt = round(balance_usdt, 2)
     print('Done back to USDT, final balance: ' + str(round(balance_btc*wprice_btcusdt,2)))
            
-if d_btc < d_eth:
+elif d_btc < d_eth:
     print('Trading USDT->BTC->ETH->USDT')
     order_usdt_eth = client.create_test_order(symbol='BTCUSDT', side = SIDE_BUY,
                      type=Client.ORDER_TYPE_MARKET,quantity= round((liquid/wprice_usdtbtc),6))
