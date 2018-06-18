@@ -5,22 +5,17 @@ import csv
 from binance.enums import *
 from binance.client import Client
 import sys
-api_key = '1S7kzJ3dRAQPXKbQeURIcgNbWIDdNpNKIVUHF4HL6S8PjntVRjvIJ4bb1r8x35zl'
-api_secret = 'r1ltG546t22G1dFRBZ5gAF93cxnrrbGfQPYkYyI9BKkw4RneAfokGhih8d8lrQAX'
+
+api_key = 'sPk9hkYh1NWH30fVsmDJccUb0xhSK02h2xOCL4Rjm8Splw3cveN95f2BrYyzXlwa'
+api_secret = 'Gdc47Iq3fi2WpN52LGivX5UnSX4oEfyfF4qDa9TfZ5daVOqNdwcKqHRb0ZFu3j3G'
 client = Client(api_key, api_secret)
 time_res = client.get_server_time()
-
-##Test Market Order Syntax
-##
-##order = client.create_test_order(
-##    symbol='BTCUSDT',
-##    side=SIDE_BUY,type=Client.ORDER_TYPE_MARKET,
-##    quantity=0.001)
 
 symbols = ['BTCUSDT', 'ETHBTC', 'ETHUSDT']
 
 #enter the theoretical liquid capital available
 #liquid = 100.00 #keep decimal to make it a float
+
 liquid = 15.00 # minimum trading is 10 USD; trading 15
 
 t0 = time.time()
@@ -219,8 +214,6 @@ t_calc = time.time()
 
 f_btc_liquid = ((liquid/wprice_usdteth)*wprice_ethbtc)*wprice_btcusdt
 f_eth_liquid = ((liquid/wprice_usdtbtc)/wprice_btceth)*wprice_ethusdt
-print('f_eth_liquid= ' +str(f_eth_liquid))
-print('f_btc_liquid= ' +str(f_btc_liquid))
 
 ####Simulated Orders with fee to determine whether transaction is profitable####
 
@@ -233,47 +226,46 @@ if f_eth_liquid >= f_btc_liquid:
     simfee_btc = simbalance_btc*0.001
     simbalance_btc -= simfee_btc
     simbalance_btc = round(simbalance_btc,6)
-    print('btc= ' + str(simbalance_btc))
-    print('btc in usdt= ' +str(simbalance_btc*wprice_btcusdt))
+    
     simbalance_eth = simbalance_btc/wprice_btceth
     simfee_eth = simbalance_eth * 0.001
     simbalance_eth -= simfee_eth
     simbalance_eth = round(simbalance_eth, 5)
-    print('eth= ' + str(simbalance_eth))
-    print('eth in usdt= ' + str(simbalance_eth*wprice_ethusdt))
+
     simbalance_usdt = simbalance_eth*wprice_ethusdt
     simfee_usdt = simbalance_usdt * 0.001
     simbalance_usdt -= simfee_usdt
     simbalance_usdtb1 = round(simbalance_usdt, 2)
-    print('Potential Profit USDT -> BTC -> ETH -> USDT ' +str(simbalance_usdtb1))
-    print('\t')
 
 simbalance_eth = 0
 simbalance_btc = 0
 simbalance_usdt = 0
+
+def truncate(f, n):
+    '''Truncates/pads a float f to n decimal places without rounding'''
+    s = '{}'.format(f)
+    if 'e' in s or 'E' in s:
+        return '{0:.{1}f}'.format(f, n)
+    i, p, d = s.partition('.')
+    return '.'.join([i, (d+'0'*n)[:n]])
+
+
 if f_eth_liquid < f_btc_liquid:
     ## USDT -> ETH -> BTC -> USDT
     simbalance_eth = liquid/wprice_usdteth
     simfee_eth = simbalance_eth*0.001
     simbalance_eth -= simfee_eth
     simbalance_eth = round(simbalance_eth, 5)
-    print('eth= ' + str(simbalance_eth))
-    print('eth in usdt = ' + str(simbalance_eth*wprice_ethusdt))
 
     simbalance_btc = simbalance_eth*wprice_ethbtc
     simfee_btc = simbalance_btc * 0.001
     simbalance_btc -= simfee_btc
-    simbalance_btc = round(simbalance_btc, 6)
-    print('btc =' + str(simbalance_btc))
-    print('btc in usdt= ' +str(simbalance_btc*wprice_btcusdt)) 
+    simbalance_btc = round(simbalance_btc, 6) 
 
     simbalance_usdt = simbalance_btc*wprice_btcusdt
     simfee_usdt = simbalance_usdt * 0.001
     simbalance_usdt -= simfee_usdt
     simbalance_usdte1 = round(simbalance_usdt, 2)
-    print('fee_USDT= ' +str(simfee_usdt))
-    print('Potential Profit USDT-> ETH ->BTC -> USDT ' + str(simbalance_usdte1))
-    print('\t')
 
 
 #Syntax get balance:
@@ -295,58 +287,76 @@ if f_eth_liquid < f_btc_liquid:
 #       orderId='orderId')
 
 
-balance_usdt = liquid
+balance_usdt0 = client.get_asset_balance(asset = 'USDT')
+balance_usdt0 = float(balance_usdt0[u'free'])
+balance_usdt = balance_usdt0
+
 error_msg = ''
 trade_dir = ''
+
+
 if  simbalance_usdte1 <= liquid and simbalance_usdtb1 <= liquid:
-    balance_usdt = liquid
-    balance_btc = client.get_asset_balance(asset='BTC')
-    balance_eth = client.get_asset_balance(asset='ETH')
+    balance_usdt = balance_usdt0
+    balance_btc = float(client.get_asset_balance(asset='BTC')[u'free'])
+    balance_eth = float(client.get_asset_balance(asset='ETH')[u'free'])
     error_msg = 'Trading not profitable'
+
+    profitlist = [t0, error_msg, 0, liquid, balance_usdt0, balance_usdt, simbalance_usdte1, simbalance_usdtb1, balance_eth, balance_btc]
+    profitopen = open('/home/ubuntu/Narbitrage/data_files/profit_real.csv', 'a')
+    profitout = csv.writer(profitopen)
+    profitout.writerow(profitlist)
+    profitopen.close()
+
     print(error_msg)
     sys.exit()
     
 if tot_qty_usdtbtc <= 0 or tot_qty_btcusdt <= 0 or tot_qty_ethbtc <= 0 or tot_qty_btceth <= 0 or tot_qty_usdteth <= 0 or tot_qty_ethusdt <= 0:
-    balance_usdt = liquid
-    balance_btc = client.get_asset_balance(asset='BTC')
-    balance_eth = client.get_asset_balance(asset='ETH')
+    balance_usdt = balance_usdt0
+    balance_btc = float(client.get_asset_balance(asset='BTC')[u'free'])
+    balance_eth = float(client.get_asset_balance(asset='ETH')[u'free'])
     error_msg = "Not enough quantity in first three orders"
+
+    profitlist = [t0, error_msg, 0, liquid, balance_usdt0, balance_usdt, simbalance_usdte1, simbalance_usdtb1, balance_eth, balance_btc]
+    profitopen = open('/home/ubuntu/Narbitrage/data_files/profit_real.csv', 'a')
+    profitout = csv.writer(profitopen)
+    profitout.writerow(profitlist)
+    profitopen.close()
+    
     print(error_msg)
     sys.exit()
 
 elif simbalance_usdte1 > simbalance_usdtb1:
     trade_dir = 'Trading USDT->ETH->BTC->USDT'
-    print(trade_dir)
-
     client.ping()
 
 #### ORDER ETH WITH USDT ####    
-    order_usdt_eth = client.create_test_order(symbol='ETHUSDT',side=SIDE_BUY,
-                    type=Client.ORDER_TYPE_MARKET, quantity= round((liquid/wprice_usdteth),5))
+    order_usdt_eth = client.order_market_buy(symbol='ETHUSDT', quantity= float(truncate(liquid/wprice_usdteth,5)))
 
-    balance_eth = client.get_asset_balance(asset='ETH')
+    balance_eth = float(client.get_asset_balance(asset='ETH')[u'free'])
 
     min_eth = 10.0/wprice_usdteth #minimum trade value is 10 USDT
 
     try:
         balance_eth >= min_eth
-    except None:
+    except False:
         time.sleep(0.2)
-
+        
+    balance_eth = float(client.get_asset_balance(asset = 'ETH')[u'free'])
+        
     try:
         balance_eth >= min_eth
     except None:
-        balance_usdt = liquid
+        time.sleep(1.5)
+        balance_eth = float(client.get_asset_balance(asset = 'ETH')[u'free'])
+        balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
         error_msg = 'Too much time getting ethereum balance'
         print(error_msg)
         sys.exit()
 
 #### ORDER BTC WITH ETH ####
-                
-    order_eth_btc = client.create_test_order(symbol='ETHBTC',side=SIDE_SELL,
-                    type=Client.ORDER_TYPE_MARKET, quantity= round((balance_eth*wprice_ethbtc),3))
+    order_eth_btc = client.order_market_sell(symbol='ETHBTC', quantity= float(truncate(balance_eth*wprice_ethbtc,3)))
 
-    balance_btc = client.get_asset_balance(asset='BTC')
+    balance_btc = float(client.get_asset_balance(asset='BTC')[u'free'])
 
     min_btc = 10.0/wprice_usdteth #minimum trade value is 10 USDT
 
@@ -355,36 +365,37 @@ elif simbalance_usdte1 > simbalance_usdtb1:
     except None:
         time.sleep(0.2)
 
+    balance_btc = float(client.get_asset_balance(asset = 'BTC')[u'free'])
+    
     try:
         balance_btc >= min_btc
     except None:
-        balance_usdt = liquid
-        error_msg = 'Too much time getting ethereum balance'
+        time.sleep(1.5)
+        balance_btc = float(client.get_asset_balance(asset = 'BTC')[u'free'])
+        balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
+        error_msg = 'Too much time getting bitcoin balance'
         print(error_msg)
         sys.exit()
 
 #### ORDER USDT WITH BTC ####
 
-    order_btc_usdt = client.create_test_order(symbol='BTCUSDT', side = SIDE_SELL,
-                    type=Client.ORDER_TYPE_MARKET, quantity = balance_btc)
+    order_btc_usdt = client.order_market_sell(symbol='BTCUSDT', quantity = float(truncate(balance_btc,6)))
 
-    balance_usdt = client.get_asset_balance(asset = 'USDT')
+    balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
 
     time.sleep(2.0)
 
-    balance_usdt = client.get_asset_balance(asset = 'USDT')
+    balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
     
            
 elif simbalance_usdtb1 > simbalance_usdte1:
     trade_dir = 'Trading USDT->BTC->ETH->USDT'
-    print(trade_dir)
 
     client.ping()
 #### ORDER BTC WITH USDT ####
-    order_usdt_btc = client.create_test_order(symbol='BTCUSDT', side = SIDE_BUY,
-                     type=Client.ORDER_TYPE_MARKET,quantity= round((liquid/wprice_usdtbtc),6))
+    order_usdt_btc = client.order_market_buy(symbol='BTCUSDT', quantity= float(truncate(liquid/wprice_usdtbtc,6)))
 
-    balance_btc = client.get_asset_balance(asset = 'BTC')
+    balance_btc = float(client.get_asset_balance(asset = 'BTC')[u'free'])
     
     min_btc = 10.0/wprice_usdtbtc
     
@@ -393,51 +404,57 @@ elif simbalance_usdtb1 > simbalance_usdte1:
     except None:
         time.sleep(0.2)
 
-    balance_btc = client.get_asset_balance(asset = 'BTC')
- 
+    balance_btc = float(client.get_asset_balance(asset = 'BTC')[u'free'])
+    
     try:
         balance_btc >= min_btc
     except None:
-        balance_usdt = liquid
-        error_msg = 'Too much time getting ethereum balance'
+        time.sleep(1.5)
+        balance_btc = float(client.get_asset_balance(asset = 'BTC')[u'free'])
+        balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
+        error_msg = 'Too much time getting bitcoin balance'
         print(error_msg)
         sys.exit()
 
 #### ORDER ETH WITH BTC ####
-    order_btc_eth = client.create_test_order(symbol='ETHBTC', side = SIDE_BUY,
-                    type = Client.ORDER_TYPE_MARKET, quantity = round((balance_btc/wprice_btceth),3))
+    order_btc_eth = client.order_market_buy(symbol='ETHBTC', quantity = float(truncate(balance_btc/wprice_btceth,3)))
 
-    balance_eth = client.get_asset_balance(asset = 'ETH')
-        
+    balance_eth = float(client.get_asset_balance(asset = 'ETH')[u'free'])
+
+    min_eth = 10.0/wprice_usdteth
+    
     try:
         balance_eth >= min_eth
     except None:
         time.sleep(0.2)
 
+    balance_eth = float(client.get_asset_balance(asset = 'ETH')[u'free'])
+    
     try:
         balance_eth >= min_eth
     except None:
-        balance_usdt = liquid
-        print('Too much time getting ethereum balance')
+        time.sleep(1.5)
+        balance_eth = float(client.get_asset_balance(asset = 'ETH')[u'free'])
+        balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
+        error_msg ='Too much time getting ethereum balance' 
+        print(error_msg)
         sys.exit()
     
 #### ORDER USDT WITH ETH ####
-    order_eth_usdt = client.create_test_order(symbol='ETHUSDT', side=SIDE_SELL,
-                    type = Client.ORDER_TYPE_MARKET,quantity = balance_eth)
+    order_eth_usdt = client.order_market_sell(symbol='ETHUSDT',quantity = float(truncate(balance_eth,5)))
 
 
-    balance_usdt = client.get_asset_balance(asset = 'USDT')
+    balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
 
     time.sleep(2.0)
 
-    balance_usdt = client.get_asset_balance(asset = 'USDT')
+    balance_usdt = float(client.get_asset_balance(asset = 'USDT')[u'free'])
     
 t_order = time.time()
 
 t_book_el = t_book-t0
 t_calc_el = t_calc-t_book
 t_order_el = t_order-t_calc
-
 
 ####Exporting data to a CSV####
 
@@ -451,19 +468,19 @@ priceqtylist = [price_usdtbtc0, price_usdtbtc1, price_usdtbtc2, qty_usdtbtc0, qt
 
 weightedavglist = [wprice_usdtbtc, wprice_btcusdt, wprice_usdteth, wprice_ethusdt, wprice_btceth,wprice_ethbtc]
 
-profitlist = [liquid, balance_usdt, simbalance_usdte1, simbalance_usdtb1, balance_eth, balance_btc]
+profitlist = [t0, error_msg, trade_dir, liquid, balance_usdt0, balance_usdt, simbalance_usdte1, simbalance_usdtb1, balance_eth, balance_btc]
 
-orderopen = open('/home/ubuntu/Narbitrage/data_files/orderbook.csv', 'a')
+orderopen = open('/home/ubuntu/Narbitrage/data_files/orderbook_real.csv', 'a')
 orderout = csv.writer(orderopen)
 orderout.writerow(priceqtylist)
 orderopen.close()
 
-avgopen = open('/home/ubuntu/Narbitrage/data_files/weightedaverage.csv', 'a')
+avgopen = open('/home/ubuntu/Narbitrage/data_files/weightedaverage_real.csv', 'a')
 avgout = csv.writer(avgopen)
 avgout.writerow(weightedavglist)
 avgopen.close()
 
-profitopen = open('/home/ubuntu/Narbitrage/data_files/profit.csv', 'a')
+profitopen = open('/home/ubuntu/Narbitrage/data_files/profit_real.csv', 'a')
 profitout = csv.writer(profitopen)
 profitout.writerow(profitlist)
-avgopen.close()
+profitopen.close()
